@@ -1,0 +1,310 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TypeDocument {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  enterprise Enterprise[]
+  person     Person[]
+
+  @@map(name: "type_document")
+}
+
+model Proffesion {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  speciality Speciality[]
+  person     Person[]
+
+  @@map(name: "proffesion")
+}
+
+model Speciality {
+  id           String     @id @default(cuid())
+  name         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now())
+  proffesion   Proffesion @relation(fields: [proffesionId], references: [id])
+  proffesionId String     @map(name: "proffesion_id")
+
+  @@map(name: "especiality")
+}
+
+model Country {
+  id          String   @id @default(cuid())
+  nameCountry String   @map(name: "name_country")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  departament Departament[]
+  person      Person[]
+  headquarter Headquarter[]
+
+  @@map(name: "country")
+}
+
+model Departament {
+  id              String   @id @default(cuid())
+  nameDepartament String   @map(name: "name_departament")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  Country         Country  @relation(fields: [countryId], references: [id])
+  countryId       String   @map(name: "country_id")
+
+  district    District[]
+  person      Person[]
+  headquarter Headquarter[]
+
+  @@map(name: "departament")
+}
+
+model District {
+  id            String      @id @default(cuid())
+  nameDistrict  String      @map(name: "name_district")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now())
+  Departament   Departament @relation(fields: [departamentId], references: [id])
+  departamentId String      @map(name: "departament_id")
+
+  province   Province[]
+  person     Person[]
+  enterprise Enterprise[]
+
+  @@map(name: "district")
+}
+
+model Province {
+  id           String       @id @default(cuid())
+  nameProvince String       @map(name: "name_province")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @default(now())
+  District     District     @relation(fields: [districtId], references: [id])
+  districtId   String       @map(name: "district_id")
+  person       Person[]
+  enterprise   Enterprise[]
+
+  @@map(name: "province")
+}
+
+model Headquarter {
+  id            String       @id @default(cuid())
+  name          String       @map(name: "name_headquarter")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now())
+  Country       Country      @relation(fields: [countryId], references: [id])
+  countryId     String       @map(name: "country_id")
+  Departament   Departament  @relation(fields: [departamentId], references: [id])
+  departamentId String       @map(name: "departament_id")
+  enterprise    Enterprise[]
+
+  @@map(name: "headquarter")
+}
+
+model Enterprise {
+  id               String            @id @default(cuid())
+  nameEnterprise   String            @map(name: "name_enterprise")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now())
+  documentType     TypeDocument      @relation(fields: [documentTypeId], references: [id])
+  documentTypeId   String            @map(name: "document_type_id")
+  documentNumber   String            @map(name: "document_number")
+  numberEmployee   Int               @map(name: "number_employee")
+  statusEnterprise EnterpriseStatus? @default(ACTIVE) @map(name: "status_employee")
+  headquarter      Headquarter       @relation(fields: [headquarterId], references: [id])
+  headquarterId    String            @map(name: "headquarter_id")
+  District         District          @relation(fields: [districtId], references: [id])
+  districtId       String            @map(name: "district_id")
+  Province         Province          @relation(fields: [provinceId], references: [id])
+  provinceId       String            @map(name: "province_id")
+  enterpriseType   EnterpriseType?   @default(CLINIC) @map(name: "type_enterprise")
+  user             User              @relation(fields: [userId], references: [id])
+  userId           String            @map(name: "user_id")
+  office           Office[]
+  employee         Employee[]
+  Patient          Patient[]
+
+  @@map(name: "enterprise")
+}
+
+enum EnterpriseType {
+  CLINIC
+  HOSPITAL
+  PHARMACY
+  OTHER
+}
+
+enum EnterpriseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model CategoryOffice {
+  id        String   @id @default(cuid())
+  name      String   @map(name: "name_category_office")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  office    Office[]
+
+  @@map(name: "category_office")
+}
+
+model Office {
+  id               String         @id @default(cuid())
+  name             String         @map(name: "name_consultorio")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now())
+  Enterprise       Enterprise     @relation(fields: [enterpriseId], references: [id])
+  enterpriseId     String         @map(name: "enterprise_id")
+  CategoryOffice   CategoryOffice @relation(fields: [categoryOfficeId], references: [id])
+  categoryOfficeId String         @map(name: "category_office_id")
+
+  @@map(name: "office")
+}
+
+model Person {
+  id             String       @id @default(cuid())
+  firstname      String
+  secondName     String
+  firstLastName  String
+  secondLastName String
+  birthDate      DateTime     @map(name: "birth_date")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now())
+  typeDocument   TypeDocument @relation(fields: [typeDocumentId], references: [id])
+  typeDocumentId String       @map(name: "type_document_id")
+  documentNumber String       @map(name: "document_number")
+  country        Country      @relation(fields: [countryId], references: [id])
+  countryId      String       @map(name: "country_id")
+  departament    Departament  @relation(fields: [departamentId], references: [id])
+  departamentId  String       @map(name: "departament_id")
+  district       District     @relation(fields: [districtId], references: [id])
+  districtId     String       @map(name: "district_id")
+  province       Province     @relation(fields: [provinceId], references: [id])
+  provinceId     String       @map(name: "province_id")
+  proffesion     Proffesion   @relation(fields: [proffesionId], references: [id])
+  proffesionId   String       @map(name: "proffesion_id")
+  address        String       @map(name: "address")
+  phone          String       @map(name: "phone")
+  email          String       @map(name: "email")
+  employee       Employee[]
+  patient        Patient[]
+  medic          Medic[]
+
+  @@map(name: "person")
+}
+
+model Employee {
+  id           String          @id @default(cuid())
+  person       Person          @relation(fields: [personId], references: [id])
+  personId     String          @map(name: "person_id")
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @default(now())
+  enterprise   Enterprise      @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String          @map(name: "enterprise_id")
+  status       EmployeeStatus? @default(ACTIVE) @map(name: "status")
+
+  @@map(name: "employee")
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Patient {
+  id           String         @id @default(cuid())
+  person       Person         @relation(fields: [personId], references: [id])
+  personId     String         @map(name: "person_id")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  enterprise   Enterprise     @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String         @map(name: "enterprise_id")
+  status       PatientStatus? @default(ACTIVE) @map(name: "status")
+
+  @@map(name: "patient")
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Medic {
+  id               String             @id @default(cuid())
+  cmp              String             @unique() @map(name: "cmp")
+  person           Person             @relation(fields: [personId], references: [id])
+  personId         String             @map(name: "person_id")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now())
+  status           MedicStatus?       @default(ACTIVE) @map(name: "status")
+  medicalSpecialty MedicalSpecialty[]
+
+  @@map(name: "medic")
+}
+
+enum MedicStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model MedicalSpecialty {
+  id                  String   @id @default(cuid())
+  name                String   @map(name: "name_speciality")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now())
+  medicalSpeciality   Medic    @relation(fields: [medicalSpecialityId], references: [id])
+  medicalSpecialityId String   @map(name: "medical_speciality_id")
+
+  @@map(name: "speciality_medic")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  cid              String    @unique() @default(cuid()) @map(name: "cid")
+  username         String    @unique() @map(name: "username")
+  password         String    @map(name: "password")
+  photo            String?   @map(name: "photo")
+  email            String    @unique() @map(name: "email")
+  verified         Boolean   @default(false) @map(name: "verified")
+  verificationCode String    @map(name: "verification_code")
+  createdAt        DateTime  @default(now())
+  userRole         UserRole? @default(ADMIN) @map(name: "user_role")
+  updatedAt        DateTime  @default(now())
+  userStatus       UserStatus? @default(ACTIVE) @map(name: "user_status")
+
+  enterprise Enterprise[]
+
+  @@map(name: "user")
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  ADMINSERVICES
+  WAREHOUSEMAN
+  CASHIER
+  COUNTER
+  APPOINTMENTMANAGER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
