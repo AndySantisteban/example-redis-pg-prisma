@@ -23,6 +23,14 @@ model TypeDocument {
   @@map(name: "type_document")
 }
 
+model Role {
+  id   String @id @default(cuid())
+  name String
+  User User[]
+
+  @@map(name: "role")
+}
+
 model Proffesion {
   id          String   @id @default(cuid())
   name        String
@@ -83,22 +91,22 @@ model District {
   Departament   Departament @relation(fields: [departamentId], references: [id])
   departamentId String      @map(name: "departament_id")
 
-  province   Province[]
-  person     Person[]
-  enterprise Enterprise[]
+  province    Province[]
+  person      Person[]
+  headquarter Headquarter[]
 
   @@map(name: "district")
 }
 
 model Province {
-  id           String       @id @default(cuid())
-  nameProvince String       @map(name: "name_province")
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @default(now())
-  District     District     @relation(fields: [districtId], references: [id])
-  districtId   String       @map(name: "district_id")
+  id           String        @id @default(cuid())
+  nameProvince String        @map(name: "name_province")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now())
+  District     District      @relation(fields: [districtId], references: [id])
+  districtId   String        @map(name: "district_id")
   person       Person[]
-  enterprise   Enterprise[]
+  headquarter  Headquarter[]
 
   @@map(name: "province")
 }
@@ -113,41 +121,49 @@ model Headquarter {
   Departament   Departament  @relation(fields: [departamentId], references: [id])
   departamentId String       @map(name: "departament_id")
   enterprise    Enterprise[]
+  Province      Province     @relation(fields: [provinceId], references: [id])
+  provinceId    String       @map(name: "province_id")
+  District      District     @relation(fields: [districtId], references: [id])
+  districtId    String       @map(name: "district_id")
 
   @@map(name: "headquarter")
 }
 
-model Enterprise {
-  id               String            @id @default(cuid())
-  nameEnterprise   String            @map(name: "name_enterprise")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @default(now())
-  documentType     TypeDocument      @relation(fields: [documentTypeId], references: [id])
-  documentTypeId   String            @map(name: "document_type_id")
-  documentNumber   String            @map(name: "document_number")
-  numberEmployee   Int               @map(name: "number_employee")
-  statusEnterprise EnterpriseStatus? @default(ACTIVE) @map(name: "status_employee")
-  headquarter      Headquarter       @relation(fields: [headquarterId], references: [id])
-  headquarterId    String            @map(name: "headquarter_id")
-  District         District          @relation(fields: [districtId], references: [id])
-  districtId       String            @map(name: "district_id")
-  Province         Province          @relation(fields: [provinceId], references: [id])
-  provinceId       String            @map(name: "province_id")
-  enterpriseType   EnterpriseType?   @default(CLINIC) @map(name: "type_enterprise")
-  user             User              @relation(fields: [userId], references: [id])
-  userId           String            @map(name: "user_id")
-  office           Office[]
-  employee         Employee[]
-  Patient          Patient[]
+model TypeEnterprise {
+  id         String       @id @default(cuid())
+  name       String       @map(name: "name_type_enterprise")
+  enterprise Enterprise[]
 
-  @@map(name: "enterprise")
+  @@map("type_enterprise")
 }
 
-enum EnterpriseType {
-  CLINIC
-  HOSPITAL
-  PHARMACY
-  OTHER
+model Enterprise {
+  id                    String            @id @default(cuid())
+  companyName           String            @map(name: "name_enterprise")
+  companyNameCommercial String            @map(name: "name_enterprise_commercial")
+  signature             String            @map(name: "signature")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now())
+  email                 String            @map(name: "email")
+  telephone             String            @map(name: "telephone")
+  documentType          TypeDocument      @relation(fields: [documentTypeId], references: [id])
+  documentTypeId        String            @map(name: "document_type_id")
+  documentNumber        String            @map(name: "document_number")
+  numberEmployee        Int               @map(name: "number_employee")
+  statusEnterprise      EnterpriseStatus? @default(ACTIVE) @map(name: "status_employee")
+  headquarter           Headquarter       @relation(fields: [headquarterId], references: [id])
+  headquarterId         String            @map(name: "headquarter_id")
+  user                  User              @relation(fields: [userId], references: [id])
+  userId                String            @map(name: "user_id")
+  typeEnterprise        TypeEnterprise    @relation(fields: [typeEnterpriseId], references: [id])
+  typeEnterpriseId      String            @map(name: "type_enterprise_id")
+  office                Office[]
+  employee              Employee[]
+  patient               Patient[]
+  warehouse             Warehouse[]
+  service               Services[]
+
+  @@map(name: "enterprise")
 }
 
 enum EnterpriseStatus {
@@ -174,6 +190,7 @@ model Office {
   enterpriseId     String         @map(name: "enterprise_id")
   CategoryOffice   CategoryOffice @relation(fields: [categoryOfficeId], references: [id])
   categoryOfficeId String         @map(name: "category_office_id")
+  schedule         Schedule[]
 
   @@map(name: "office")
 }
@@ -237,6 +254,7 @@ model Patient {
   enterprise   Enterprise     @relation(fields: [enterpriseId], references: [id])
   enterpriseId String         @map(name: "enterprise_id")
   status       PatientStatus? @default(ACTIVE) @map(name: "status")
+  appointments Appointments[]
 
   @@map(name: "patient")
 }
@@ -255,6 +273,8 @@ model Medic {
   updatedAt        DateTime           @default(now())
   status           MedicStatus?       @default(ACTIVE) @map(name: "status")
   medicalSpecialty MedicalSpecialty[]
+  appointments     Appointments[]
+  schedule         Schedule[]
 
   @@map(name: "medic")
 }
@@ -275,36 +295,111 @@ model MedicalSpecialty {
   @@map(name: "speciality_medic")
 }
 
-model User {
-  id               String    @id @default(cuid())
-  cid              String    @unique() @default(cuid()) @map(name: "cid")
-  username         String    @unique() @map(name: "username")
-  password         String    @map(name: "password")
-  photo            String?   @map(name: "photo")
-  email            String    @unique() @map(name: "email")
-  verified         Boolean   @default(false) @map(name: "verified")
-  verificationCode String    @map(name: "verification_code")
-  createdAt        DateTime  @default(now())
-  userRole         UserRole? @default(ADMIN) @map(name: "user_role")
-  updatedAt        DateTime  @default(now())
-  userStatus       UserStatus? @default(ACTIVE) @map(name: "user_status")
+model Appointments {
+  id          String              @id @default(cuid())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now())
+  patient     Patient             @relation(fields: [patientId], references: [id])
+  patientId   String              @map(name: "patient_id")
+  medic       Medic               @relation(fields: [medicId], references: [id])
+  medicId     String              @map(name: "medic_id")
+  status      AppointmentsStatus? @default(ACTIVE) @map(name: "status")
+  initialDate DateTime            @map(name: "initial_date")
+  finalDate   DateTime            @map(name: "final_date")
+  description String?             @map(name: "description")
 
-  enterprise Enterprise[]
+  @@map(name: "appointments")
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  dayOfWeek DateTime @map(name: "day_of_week")
+  startTime DateTime @map(name: "start_time")
+  endTime   DateTime @map(name: "end_time")
+  medic     Medic    @relation(fields: [medicId], references: [id])
+  medicId   String   @map(name: "medic_id")
+  office    Office   @relation(fields: [officeId], references: [id])
+  officeId  String   @map(name: "office_id")
+
+  @@map(name: "schedule")
+}
+
+enum AppointmentsStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id               String       @id @default(cuid())
+  cid              String       @unique() @default(cuid()) @map(name: "cid")
+  username         String       @unique() @map(name: "username")
+  password         String       @map(name: "password")
+  photo            String?      @map(name: "photo")
+  email            String       @unique() @map(name: "email")
+  verified         Boolean      @default(false) @map(name: "verified")
+  verificationCode String       @map(name: "verification_code")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @default(now())
+  userStatus       UserStatus?  @default(ACTIVE) @map(name: "user_status")
+  role             Role         @relation(fields: [roleId], references: [id])
+  roleId           String       @map(name: "role_id")
+  enterprise       Enterprise[]
 
   @@map(name: "user")
 }
 
-enum UserRole {
-  SUPERADMIN
-  ADMIN
-  ADMINSERVICES
-  WAREHOUSEMAN
-  CASHIER
-  COUNTER
-  APPOINTMENTMANAGER
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }
 
-enum UserStatus {
+model Warehouse {
+  id           String     @id @default(cuid())
+  cid          String     @unique() @default(cuid()) @map(name: "cid")
+  name         String     @map(name: "name")
+  product      Product[]
+  enterprise   Enterprise @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String     @map(name: "enterprise_id")
+
+  @@map(name: "warehouse")
+}
+
+model Product {
+  id          String         @id @unique @default(cuid())
+  description String         @map(name: "description")
+  price       String         @map(name: "price")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now())
+  expiratedAt DateTime
+  status      ProductStatus? @default(ACTIVE) @map(name: "status")
+  warehouse   Warehouse      @relation(fields: [warehouseId], references: [id])
+  warehouseId String         @map(name: "warehouse_id")
+
+  @@map(name: "product")
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Services {
+  id           String         @id @unique @default(cuid())
+  cod          String         @map(name: "cod")
+  description  String         @map(name: "description")
+  price        String         @map(name: "price")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  status       ServiceStatus? @default(ACTIVE) @map(name: "status")
+  enterprise   Enterprise     @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String         @map(name: "enterprise_id")
+
+  @@map(name: "services")
+}
+
+enum ServiceStatus {
   ACTIVE
   INACTIVE
 }

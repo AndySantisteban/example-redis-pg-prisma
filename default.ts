@@ -1,3 +1,3 @@
 export default {
-  origin: "https://localhost:3000",
-};
+  origin: 'https://localhost:3000'
+}

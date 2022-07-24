@@ -1,5 +1,6 @@
-import { cleanEnv, port, str } from "envalid";
+import { cleanEnv, port, str } from 'envalid'
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const validateEnv = () => {
   cleanEnv(process.env, {
     NODE_ENV: str(),
@@ -8,8 +9,8 @@ const validateEnv = () => {
     POSTGRES_PORT: port(),
     POSTGRES_USER: str(),
     POSTGRES_PASSWORD: str(),
-    POSTGRES_DB: str(),
-  });
-};
+    POSTGRES_DB: str()
+  })
+}
 
-export default validateEnv;
+export default validateEnv
